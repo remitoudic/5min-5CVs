@@ -1,0 +1,39 @@
+
+services:
+  vuejs-app:
+    # container_name: vuejs-app
+    build: ./services/frontend
+    ports:
+      - "${PORT_FE_HOST}:3000"
+    volumes:
+      - ./services/frontend/:/usr/src/app/
+    
+    depends_on:
+      - postgres
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+
+  postgres:
+    image: postgres:latest
+    # container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  
+  fastapi:
+    build:
+      context: .
+      dockerfile: ./services/backend/dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/backend/:/usr/src/app/
+
+
+volumes:
+  postgres-data:

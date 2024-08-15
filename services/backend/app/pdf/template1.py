@@ -2,7 +2,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
-
+import io
+import random
 
 
 class TemplateCv1:
@@ -82,7 +83,7 @@ class TemplateCv1:
         self.doc.build(self.flowables)
         self.buffer.seek(0)
 
-#Example usage ----------------------------
+# Example usage ----------------------------
 data = {
     "name": "Joe Doe",
     "career_objectives": "Seeking a challenging role in data science where I can utilize my skills to contribute to organizational success.",
@@ -95,12 +96,21 @@ data = {
         {"school": "San Joseph High School", "date": "2010 - 2012"}
     ]
 }
-
+ 
 
 # Create the filename using the template "template1_" + name + "_" + id
-# user_id = random.randint(1000, 9999)  # Example ID
-# filename = f"template1_{data['name'].replace(' ', '_')}_{user_id}.pdf"
+user_id = random.randint(1000, 9999)  # Example ID
+filename = f"template1_{data['name'].replace(' ', '_')}_{user_id}.pdf"
+
+# Create a file-like buffer for the PDF
+buffer = io.BytesIO()
 
 # Create the CV PDF using the class
-# cv = TemplateCv1(filename)
-# cv.build_pdf(data2)
+cv = TemplateCv1(buffer)
+cv.build_pdf(data)
+
+# Write the buffer to a file
+with open(filename, 'wb') as f:
+    f.write(buffer.getvalue())
+
+buffer.close()

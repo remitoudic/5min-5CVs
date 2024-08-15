@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
+from pydantic.functional_validators import field_validator
 from typing import List
 
 class WorkExperience(BaseModel):

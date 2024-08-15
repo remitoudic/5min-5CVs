@@ -4,7 +4,9 @@
     <div class="content">
       <h1 class="title">CV Builder</h1>
 
-      <!-- Form for generating CV -->
+    <tabs >
+      <tab title="Manual Form">
+              <!-- Form for generating CV -->
       <form @submit.prevent="generateCV" class="cv-form">
         <div class="form-group">
           <label for="name">Name:</label>
@@ -38,6 +40,20 @@
         <button type="submit" class="submit-btn">Generate CV</button>
       </form>
 
+
+      </tab>
+      <tab title="Load CV"> 
+        <p> Load your CV feature </p>
+      </tab>
+      <tab title="Load from LinkedIN ">Load  your data from LinkedIn feature</tab>
+    </tabs>
+ 
+
+
+
+
+
+
       <!-- Display the generated PDF -->
       <div v-if="pdfUrl" class="pdf-container">
         <h2>Your CV PDF:</h2>
@@ -48,8 +64,15 @@
 </template>
 
 <script>
+import Tab from '../components/Tab.vue'
+import Tabs from '../components/Tabs.vue'
 export default {
   name: 'HomeView',
+  components: {
+    Tab,
+    Tabs
+  },
+
   data() {
     return {
       cvData: {
@@ -186,4 +209,3 @@ iframe {
   border-radius: 6px;
 }
 </style>
-

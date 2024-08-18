@@ -4,55 +4,54 @@
     <div class="content">
       <h1 class="title">CV Builder</h1>
 
-    <tabs >
-      <tab title="Manual Form">
-              <!-- Form for generating CV -->
-      <form @submit.prevent="generateCV" class="cv-form">
-        <div class="form-group">
-          <label for="name">Name:</label>
-          <input type="text" id="name" v-model="cvData.name" required />
-        </div>
+      <tabs>
+        <tab title="Manual Form">
+          <!-- Form for generating CV -->
+          <form @submit.prevent="generateCV" class="cv-form">
+            <div class="form-group">
+              <label for="name">Name:</label>
+              <input type="text" id="name" v-model="cvData.name" required />
+            </div>
 
-        <div class="form-group">
-          <label for="career_objectives">Career Objectives:</label>
-          <textarea id="career_objectives" v-model="cvData.career_objectives" required></textarea>
-        </div>
+            <div class="form-group">
+              <label for="career_objectives">Career Objectives:</label>
+              <textarea id="career_objectives" v-model="cvData.career_objectives" required></textarea>
+            </div>
 
-        <div class="form-group">
-          <label>Work Experience:</label>
-          <div v-for="(experience, index) in cvData.work_experience" :key="index" class="experience-group">
-            <input type="text" placeholder="Position" v-model="experience.position" required />
-            <input type="text" placeholder="Company" v-model="experience.company" required />
-            <input type="text" placeholder="Date" v-model="experience.date" required />
+            <div class="form-group">
+              <label>Work Experience:</label>
+              <div v-for="(experience, index) in cvData.work_experience" :key="index" class="experience-group">
+                <input type="text" placeholder="Position" v-model="experience.position" required />
+                <input type="text" placeholder="Company" v-model="experience.company" required />
+                <input type="text" placeholder="Date" v-model="experience.date" required />
+              </div>
+              <button type="button" @click="addWorkExperience" class="add-btn">Add Work Experience</button>
+            </div>
+
+            <div class="form-group">
+              <label>Education:</label>
+              <div v-for="(edu, index) in cvData.education" :key="index" class="education-group">
+                <input type="text" placeholder="School" v-model="edu.school" required />
+                <input type="text" placeholder="Date" v-model="edu.date" required />
+              </div>
+              <button type="button" @click="addEducation" class="add-btn">Add Education</button>
+            </div>
+
+            <button type="submit" class="submit-btn">Generate CV</button>
+          </form>
+        </tab>
+        <tab title="Load CV"> 
+          <div class="load-cv-container">
+            <h2>Load your CV</h2>
+            <input type="file" @change="handleFileUpload" accept=".pdf" ref="fileInput" />
+            <button @click="loadCV" class="load-btn" :disabled="!selectedFile">Load CV</button>
+            <p v-if="loadMessage" :class="{'success-message': loadSuccess, 'error-message': !loadSuccess}">
+              {{ loadMessage }}
+            </p>
           </div>
-          <button type="button" @click="addWorkExperience" class="add-btn">Add Work Experience</button>
-        </div>
-
-        <div class="form-group">
-          <label>Education:</label>
-          <div v-for="(edu, index) in cvData.education" :key="index" class="education-group">
-            <input type="text" placeholder="School" v-model="edu.school" required />
-            <input type="text" placeholder="Date" v-model="edu.date" required />
-          </div>
-          <button type="button" @click="addEducation" class="add-btn">Add Education</button>
-        </div>
-
-        <button type="submit" class="submit-btn">Generate CV</button>
-      </form>
-
-
-      </tab>
-      <tab title="Load CV"> 
-        <p> Load your CV feature </p>
-      </tab>
-      <tab title="Load from LinkedIN ">Load  your data from LinkedIn feature</tab>
-    </tabs>
- 
-
-
-
-
-
+        </tab>
+        <tab title="Load from LinkedIN">Load your data from LinkedIn feature</tab>
+      </tabs>
 
       <!-- Display the generated PDF -->
       <div v-if="pdfUrl" class="pdf-container">
@@ -66,6 +65,7 @@
 <script>
 import Tab from '../components/Tab.vue'
 import Tabs from '../components/Tabs.vue'
+
 export default {
   name: 'HomeView',
   components: {
@@ -81,7 +81,10 @@ export default {
         work_experience: [],
         education: []
       },
-      pdfUrl: null
+      pdfUrl: null,
+      selectedFile: null,
+      loadMessage: '',
+      loadSuccess: false
     };
   },
   methods: {
@@ -111,101 +114,79 @@ export default {
         console.error(error);
         alert("There was an error generating the CV.");
       }
+    },
+    handleFileUpload(event) {
+      this.selectedFile = event.target.files[0];
+    },
+    async loadCV() {
+      if (!this.selectedFile) {
+        this.loadMessage = 'Please select a file first.';
+        this.loadSuccess = false;
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', this.selectedFile);
+
+      try {
+        const response = await fetch('http://0.0.0.0:8000/upload-cv', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload CV");
+        }
+
+        const result = await response.json();
+        this.loadMessage = 'CV uploaded successfully!';
+        this.loadSuccess = true;
+        console.log(result); // You can handle the server response here
+      } catch (error) {
+        console.error(error);
+        this.loadMessage = 'There was an error uploading the CV.';
+        this.loadSuccess = false;
+      }
     }
   }
 };
 </script>
 
 <style scoped>
-/* Styling for larger screens */
-#home-view {
+/* Existing styles... */
+
+.load-cv-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 1000px;
-  min-height: 100vh;
-  background-color: #e5f5e0; /* Light green background */
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-}
-
-.content {
-  background-color: white;
-  padding: 30px; /* Increased padding for more spacious content */
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 1200px; /* Increased max-width for wider content */
-  width: 100%;
-  margin-top: 20px;
-}
-
-.title {
-  font-size: 3rem; /* Larger font size for the title */
-  margin-bottom: 20px;
-  color: #2e7d32; /* Dark green color */
-  text-align: center;
-}
-
-.cv-form {
-  display: flex;
-  flex-direction: column;
   gap: 20px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-weight: bold;
-  color: #388e3c; /* Green color */
-  margin-bottom: 8px;
-}
-
-.form-group input,
-.form-group textarea {
-  padding: 12px; /* Increased padding for inputs and textarea */
-  border: 1px solid #c8e6c9; /* Light green border */
-  border-radius: 6px;
-  font-size: 1.1rem; /* Larger font size for better readability */
-}
-
-.experience-group,
-.education-group {
-  display: flex;
-  gap: 15px; /* Increased gap between fields */
-  margin-bottom: 15px; /* Increased margin-bottom for spacing */
-}
-
-.add-btn,
-.submit-btn {
-  background-color: #66bb6a; /* Green button background */
+.load-btn {
+  background-color: #66bb6a;
   color: white;
   border: none;
-  padding: 12px 20px; /* Increased padding for larger buttons */
+  padding: 12px 20px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 1.1rem; /* Larger font size for buttons */
+  font-size: 1.1rem;
   transition: background-color 0.3s ease;
 }
 
-.add-btn:hover,
-.submit-btn:hover {
-  background-color: #4caf50; /* Darker green on hover */
+.load-btn:hover {
+  background-color: #4caf50;
 }
 
-.pdf-container {
-  margin-top: 40px;
+.load-btn:disabled {
+  background-color: #c8e6c9;
+  cursor: not-allowed;
 }
 
-.pdf-container h2 {
-  color: #2e7d32; /* Dark green color */
-  margin-bottom: 20px;
+.success-message {
+  color: #2e7d32;
 }
 
-iframe {
-  border: 2px solid #c8e6c9; /* Light green border for iframe */
-  border-radius: 6px;
+.error-message {
+  color: #c62828;
 }
 </style>

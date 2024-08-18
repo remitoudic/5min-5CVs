@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse, JSONResponse
 from app.pdf.template1 import TemplateCv1
 from app.api.models import CVData
 import io
+import os
+import shutil
 
 router = APIRouter()
 
@@ -33,3 +35,22 @@ async def generate_cv(data: CVData):
     except Exception as e:
         print(f"Error generating CV: {str(e)}")  # Log the error
         raise HTTPException(status_code=500, detail="Error generating CV")
+
+@router.post("/upload-cv")
+async def upload_cv(file: UploadFile = File(...)):
+    try:
+        # Create the directory if it doesn't exist
+        upload_dir = "app/api/pdf_uploaded"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # Create the file path
+        file_path = os.path.join(upload_dir, file.filename)
+
+        # Save the uploaded file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        return JSONResponse(content={"message": "CV uploaded successfully", "filename": file.filename}, status_code=200)
+    except Exception as e:
+        print(f"Error uploading CV: {str(e)}")  # Log the error
+        raise HTTPException(status_code=500, detail="Error uploading CV")
